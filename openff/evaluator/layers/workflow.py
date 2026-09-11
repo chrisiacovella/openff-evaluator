@@ -8,6 +8,7 @@ import copy
 import logging
 import os
 
+from docs.tutorials.tutorial04 import physical_property
 from openff.evaluator.attributes import UNDEFINED, Attribute
 from openff.evaluator.datasets import CalculationSource
 from openff.evaluator.layers import (
@@ -80,6 +81,47 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         return global_metadata
 
     @classmethod
+    def _build_workflow_function(cls, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options):
+        logger.info(f"Building workflow {index}")
+
+        property_type = type(physical_property).__name__
+
+        # Make sure a schema has been defined for this class of property
+        # and this layer.
+        if (
+                property_type not in options.calculation_schemas
+                or cls.__name__ not in options.calculation_schemas[property_type]
+        ):
+            continue
+
+        schema = options.calculation_schemas[property_type][cls.__name__]
+
+        # Make sure the calculation schema is the correct type for this layer.
+        assert isinstance(schema, BaseWorkflowCalculationSchema)
+        assert isinstance(schema, cls.required_schema_type())
+
+        global_metadata = cls._get_workflow_metadata(
+            working_directory,
+            physical_property,
+            force_field_path,
+            parameter_gradient_keys,
+            storage_backend,
+            schema,
+        )
+
+        if global_metadata is None:
+            # Make sure we have metadata returned for this
+            # property, e.g. we have data to reweight if
+            # required.
+            continue
+
+        workflow = Workflow(global_metadata, physical_property.id)
+        workflow.schema = schema.workflow_schema
+
+        return workflow
+
+
+    @classmethod
     def _build_workflow_graph(
         cls,
         working_directory,
@@ -113,43 +155,54 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         provenance = {}
         workflows = []
 
-        for index, physical_property in enumerate(properties):
-            logger.info(f"Building workflow {index} of {len(properties)}")
+        logger.info(f"Building {len(properties)} workflows.")
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
-            property_type = type(physical_property).__name__
-
-            # Make sure a schema has been defined for this class of property
-            # and this layer.
-            if (
-                property_type not in options.calculation_schemas
-                or cls.__name__ not in options.calculation_schemas[property_type]
-            ):
-                continue
-
-            schema = options.calculation_schemas[property_type][cls.__name__]
-
-            # Make sure the calculation schema is the correct type for this layer.
-            assert isinstance(schema, BaseWorkflowCalculationSchema)
-            assert isinstance(schema, cls.required_schema_type())
-
-            global_metadata = cls._get_workflow_metadata(
-                working_directory,
-                physical_property,
-                force_field_path,
-                parameter_gradient_keys,
-                storage_backend,
-                schema,
-            )
-
-            if global_metadata is None:
-                # Make sure we have metadata returned for this
-                # property, e.g. we have data to reweight if
-                # required.
-                continue
-
-            workflow = Workflow(global_metadata, physical_property.id)
-            workflow.schema = schema.workflow_schema
-            workflows.append(workflow)
+        with ThreadPoolExecutor() as executor:
+            futures = [executor.submit(cls._build_workflow_function, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options) for index, physical_property in enumerate(properties)]
+            for future in as_completed(futures):
+                try:
+                    workflow = future.result()
+                    workflows.append(workflow)
+                except Exception as e:
+                    print(f"Workkflow building generated an exception: {e}")
+        # for index, physical_property in enumerate(properties):
+        #     logger.info(f"Building workflow {index} of {len(properties)}")
+        #
+        #     property_type = type(physical_property).__name__
+        #
+        #     # Make sure a schema has been defined for this class of property
+        #     # and this layer.
+        #     if (
+        #         property_type not in options.calculation_schemas
+        #         or cls.__name__ not in options.calculation_schemas[property_type]
+        #     ):
+        #         continue
+        #
+        #     schema = options.calculation_schemas[property_type][cls.__name__]
+        #
+        #     # Make sure the calculation schema is the correct type for this layer.
+        #     assert isinstance(schema, BaseWorkflowCalculationSchema)
+        #     assert isinstance(schema, cls.required_schema_type())
+        #
+        #     global_metadata = cls._get_workflow_metadata(
+        #         working_directory,
+        #         physical_property,
+        #         force_field_path,
+        #         parameter_gradient_keys,
+        #         storage_backend,
+        #         schema,
+        #     )
+        #
+        #     if global_metadata is None:
+        #         # Make sure we have metadata returned for this
+        #         # property, e.g. we have data to reweight if
+        #         # required.
+        #         continue
+        #
+        #     workflow = Workflow(global_metadata, physical_property.id)
+        #     workflow.schema = schema.workflow_schema
+        #     workflows.append(workflow)
 
         workflow_graph = WorkflowGraph()
         workflow_graph.add_workflows(*workflows)
