@@ -8,7 +8,6 @@ import copy
 import logging
 import os
 
-from docs.tutorials.tutorial04 import physical_property
 from openff.evaluator.attributes import UNDEFINED, Attribute
 from openff.evaluator.datasets import CalculationSource
 from openff.evaluator.layers import (
