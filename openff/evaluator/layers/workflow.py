@@ -88,11 +88,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
         # Make sure a schema has been defined for this class of property
         # and this layer.
-        if (
-                property_type not in options.calculation_schemas
-                or cls.__name__ not in options.calculation_schemas[property_type]
-        ):
-            continue
+        if property_type not in options.calculation_schemas or cls.__name__ not in options.calculation_schemas[property_type]:
+            return None
 
         schema = options.calculation_schemas[property_type][cls.__name__]
 
@@ -113,7 +110,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             # Make sure we have metadata returned for this
             # property, e.g. we have data to reweight if
             # required.
-            continue
+            return None
 
         workflow = Workflow(global_metadata, physical_property.id)
         workflow.schema = schema.workflow_schema
@@ -163,7 +160,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             for future in as_completed(futures):
                 try:
                     workflow = future.result()
-                    workflows.append(workflow)
+                    if workflow is not None:
+                        workflows.append(workflow)
                 except Exception as e:
                     print(f"Workflow building generated an exception: {e}")
         # for index, physical_property in enumerate(properties):
