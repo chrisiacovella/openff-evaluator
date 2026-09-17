@@ -81,6 +81,9 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
     @classmethod
     def _build_workflow_function(cls, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options):
+        import time
+
+        start_time = time.time()
         logger.info(f"Building workflow {index}")
 
         property_type = type(physical_property).__name__
@@ -114,6 +117,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         workflow = Workflow(global_metadata, physical_property.id)
         workflow.schema = schema.workflow_schema
         logger.info(f"Completed building workflow {index}")
+        end_time = time.time()
+        logger.info(f"Time taken to build workflow {index}: {(end_time - start_time)/60} minutes")
 
         return workflow
 
@@ -155,7 +160,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         logger.info(f"Building {len(properties)} workflows.")
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        with ThreadPoolExecutor(max_workers=256) as executor:
+        with ThreadPoolExecutor(max_workers=len(properties)) as executor:
             futures = [executor.submit(cls._build_workflow_function, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options) for index, physical_property in enumerate(properties)]
             for future in as_completed(futures):
                 try:
