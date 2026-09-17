@@ -172,9 +172,10 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         #                 workflows.append(workflow)
         #         except Exception as e:
         #             print(f"Workflow building generated an exception: {e}")
+        import time
         for index, physical_property in enumerate(properties):
             logger.info(f"Building workflow {index} of {len(properties)}")
-
+            time_start = time.time()
             property_type = type(physical_property).__name__
 
             # Make sure a schema has been defined for this class of property
@@ -217,6 +218,9 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 schema_json_cache[schema_key] = cached_schema_json
 
             workflow._set_schema_from_json(cached_schema_json)
+
+            time_end = time.time()
+            logger.info(f"Completed building workflow {index} of {len(properties)} in {(time_end - time_start)/60} minutes")
             workflows.append(workflow)
 
         workflow_graph = WorkflowGraph()
