@@ -113,6 +113,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
         workflow = Workflow(global_metadata, physical_property.id)
         workflow.schema = schema.workflow_schema
+        logger.info(f"Completed building workflow {index}")
 
         return workflow
 
