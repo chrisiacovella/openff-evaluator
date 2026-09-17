@@ -140,6 +140,32 @@ class Workflow:
                     schema.outputs_to_store[label]
                 )
 
+    def _set_schem_from_parsed(self, schema_parsed):
+        """Sets this workflow's properties from a `WorkflowSchema`.
+
+        Parameters
+        ----------
+        schema: WorkflowSchema
+            The schema which outlines this steps in this workflow.
+        """
+        # Copy the schema.
+        schema = schema_parsed
+
+        if schema.final_value_source != UNDEFINED:
+            self._final_value_source = schema.final_value_source
+            self._final_value_source.append_uuid(self.uuid)
+
+        self._build_protocols(schema)
+
+        self._outputs_to_store = {}
+
+        if schema.outputs_to_store != UNDEFINED:
+            for label in schema.outputs_to_store:
+                self._append_uuid_to_output_to_store(schema.outputs_to_store[label])
+                self._outputs_to_store[label] = self._build_output_to_store(
+                    schema.outputs_to_store[label]
+                )
+
     def _append_uuid_to_output_to_store(self, output_to_store):
         """Appends this workflows uuid to all of the protocol paths
         within an output to store, and all of its child outputs.
