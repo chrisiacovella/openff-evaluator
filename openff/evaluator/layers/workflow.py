@@ -154,7 +154,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         logger.info(f"Building {len(properties)} workflows.")
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        with ThreadPoolExecutor(max_workers=32) as executor:
+        with ThreadPoolExecutor(max_workers=256) as executor:
             futures = [executor.submit(cls._build_workflow_function, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options) for index, physical_property in enumerate(properties)]
             for future in as_completed(futures):
                 try:
