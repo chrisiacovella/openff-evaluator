@@ -217,7 +217,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 cached_schema_json = schema.workflow_schema.json()
                 schema_json_cache[schema_key] = cached_schema_json
 
-            workflow._set_schema_from_json(cached_schema_json)
+            workflow.schema = cached_schema_json
 
             time_end = time.time()
             logger.info(f"Completed building workflow {index} of {len(properties)} in {(time_end - time_start)/60} minutes")
