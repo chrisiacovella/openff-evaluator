@@ -156,73 +156,74 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
         provenance = {}
         workflows = []
-
-        # let's try to speed things up by caching the schema jsons so we don't have to re-serialize them for every workflow
-        schema_json_cache = {}
-
-        # logger.info(f"Building {len(properties)} workflows.")
-        # from concurrent.futures import ThreadPoolExecutor, as_completed
-        #
-        # with ThreadPoolExecutor(max_workers=len(properties)) as executor:
-        #     futures = [executor.submit(cls._build_workflow_function, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options) for index, physical_property in enumerate(properties)]
-        #     for future in as_completed(futures):
-        #         try:
-        #             workflow = future.result()
-        #             if workflow is not None:
-        #                 workflows.append(workflow)
-        #         except Exception as e:
-        #             print(f"Workflow building generated an exception: {e}")
         import time
         initial_time = time.time()
-        for index, physical_property in enumerate(properties):
-            logger.info(f"Building workflow {index} of {len(properties)}")
-            time_start = time.time()
-            property_type = type(physical_property).__name__
 
-            # Make sure a schema has been defined for this class of property
-            # and this layer.
-            if (
-                property_type not in options.calculation_schemas
-                or cls.__name__ not in options.calculation_schemas[property_type]
-            ):
-                continue
 
-            schema = options.calculation_schemas[property_type][cls.__name__]
 
-            # Make sure the calculation schema is the correct type for this layer.
-            assert isinstance(schema, BaseWorkflowCalculationSchema)
-            assert isinstance(schema, cls.required_schema_type())
+        logger.info(f"Building {len(properties)} workflows.")
+        from concurrent.futures import ProcessPoolExecutor
 
-            global_metadata = cls._get_workflow_metadata(
-                working_directory,
-                physical_property,
-                force_field_path,
-                parameter_gradient_keys,
-                storage_backend,
-                schema,
-            )
 
-            if global_metadata is None:
-                # Make sure we have metadata returned for this
-                # property, e.g. we have data to reweight if
-                # required.
-                continue
+        with ProcessPoolExecutor(max_workers=64) as executor:
+            futures = [executor.submit(cls._build_workflow_function, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options) for index, physical_property in enumerate(properties)]
+            for future in as_completed(futures):
+                try:
+                    workflow = future.result()
+                    if workflow is not None:
+                        workflows.append(workflow)
+                except Exception as e:
+                    print(f"Workflow building generated an exception: {e}")
 
-            workflow = Workflow(global_metadata, physical_property.id)
-
-            workflow.schema = schema.workflow_schema
-            # schema_key = id(schema.workflow_schema)
-            # cached_schema_json = schema_json_cache.get(schema_key)
-            #
-            # if cached_schema_json is None:
-            #     cached_schema_json = WorkflowSchema.parse_json(schema.workflow_schema.json())
-            #     schema_json_cache[schema_key] = cached_schema_json
-            #
-            # workflow._set_schem_from_parsed(cached_schema_json)
-
-            time_end = time.time()
-            logger.info(f"Completed building workflow {index} of {len(properties)} in {(time_end - time_start)/60} minutes")
-            workflows.append(workflow)
+        # for index, physical_property in enumerate(properties):
+        #     logger.info(f"Building workflow {index} of {len(properties)}")
+        #     time_start = time.time()
+        #     property_type = type(physical_property).__name__
+        #
+        #     # Make sure a schema has been defined for this class of property
+        #     # and this layer.
+        #     if (
+        #         property_type not in options.calculation_schemas
+        #         or cls.__name__ not in options.calculation_schemas[property_type]
+        #     ):
+        #         continue
+        #
+        #     schema = options.calculation_schemas[property_type][cls.__name__]
+        #
+        #     # Make sure the calculation schema is the correct type for this layer.
+        #     assert isinstance(schema, BaseWorkflowCalculationSchema)
+        #     assert isinstance(schema, cls.required_schema_type())
+        #
+        #     global_metadata = cls._get_workflow_metadata(
+        #         working_directory,
+        #         physical_property,
+        #         force_field_path,
+        #         parameter_gradient_keys,
+        #         storage_backend,
+        #         schema,
+        #     )
+        #
+        #     if global_metadata is None:
+        #         # Make sure we have metadata returned for this
+        #         # property, e.g. we have data to reweight if
+        #         # required.
+        #         continue
+        #
+        #     workflow = Workflow(global_metadata, physical_property.id)
+        #
+        #     workflow.schema = schema.workflow_schema
+        #     # schema_key = id(schema.workflow_schema)
+        #     # cached_schema_json = schema_json_cache.get(schema_key)
+        #     #
+        #     # if cached_schema_json is None:
+        #     #     cached_schema_json = WorkflowSchema.parse_json(schema.workflow_schema.json())
+        #     #     schema_json_cache[schema_key] = cached_schema_json
+        #     #
+        #     # workflow._set_schem_from_parsed(cached_schema_json)
+        #
+        #     time_end = time.time()
+        #     logger.info(f"Completed building workflow {index} of {len(properties)} in {(time_end - time_start)/60} minutes")
+        #     workflows.append(workflow)
 
         workflow_graph = WorkflowGraph()
         workflow_graph.add_workflows(*workflows)
