@@ -164,6 +164,10 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         logger.info(f"Building {len(properties)} workflows.")
         from concurrent.futures import ProcessPoolExecutor, as_completed
 
+        import pickle
+        workflow = cls._build_workflow_function(0, properties[0], working_directory, force_field_path,
+                                                parameter_gradient_keys, storage_backend, options)
+        pickle.dumps(workflow)
 
         with ProcessPoolExecutor(max_workers=8) as executor:
             futures = [executor.submit(cls._build_workflow_function, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options) for index, physical_property in enumerate(properties)]
