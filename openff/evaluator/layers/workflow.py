@@ -214,7 +214,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             cached_schema_json = schema_json_cache.get(schema_key)
 
             if cached_schema_json is None:
-                cached_schema_json = WorkflowSchema.parse_json(schema.json())
+                cached_schema_json = WorkflowSchema.parse_json(schema.workflow_schema.json())
                 schema_json_cache[schema_key] = cached_schema_json
 
             workflow._set_schem_from_parsed(cached_schema_json)
