@@ -165,7 +165,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
-        with ProcessPoolExecutor(max_workers=64) as executor:
+        with ProcessPoolExecutor(max_workers=8) as executor:
             futures = [executor.submit(cls._build_workflow_function, index, physical_property, working_directory, force_field_path, parameter_gradient_keys, storage_backend, options) for index, physical_property in enumerate(properties)]
             for future in as_completed(futures):
                 try:
