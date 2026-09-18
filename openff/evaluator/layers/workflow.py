@@ -173,6 +173,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         #         except Exception as e:
         #             print(f"Workflow building generated an exception: {e}")
         import time
+        initial_time = time.time()
         for index, physical_property in enumerate(properties):
             logger.info(f"Building workflow {index} of {len(properties)}")
             time_start = time.time()
@@ -209,15 +210,15 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
             workflow = Workflow(global_metadata, physical_property.id)
 
-            #workflow.schema = schema.workflow_schema
-            schema_key = id(schema.workflow_schema)
-            cached_schema_json = schema_json_cache.get(schema_key)
-
-            if cached_schema_json is None:
-                cached_schema_json = WorkflowSchema.parse_json(schema.workflow_schema.json())
-                schema_json_cache[schema_key] = cached_schema_json
-
-            workflow._set_schem_from_parsed(cached_schema_json)
+            workflow.schema = schema.workflow_schema
+            # schema_key = id(schema.workflow_schema)
+            # cached_schema_json = schema_json_cache.get(schema_key)
+            #
+            # if cached_schema_json is None:
+            #     cached_schema_json = WorkflowSchema.parse_json(schema.workflow_schema.json())
+            #     schema_json_cache[schema_key] = cached_schema_json
+            #
+            # workflow._set_schem_from_parsed(cached_schema_json)
 
             time_end = time.time()
             logger.info(f"Completed building workflow {index} of {len(properties)} in {(time_end - time_start)/60} minutes")
@@ -230,7 +231,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             provenance[workflow.uuid] = CalculationSource(
                 fidelity=cls.__name__, provenance=workflow.schema.json()
             )
-
+        final_time = time.time()
+        logger.info(f"Completed building {len(workflows)} workflows in {(final_time - initial_time)/60} minutes")
         return workflow_graph, provenance
 
     @staticmethod
