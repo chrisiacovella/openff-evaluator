@@ -162,7 +162,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
 
         logger.info(f"Building {len(properties)} workflows.")
-        from concurrent.futures import ProcessPoolExecutor
+        from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
         with ProcessPoolExecutor(max_workers=64) as executor:
