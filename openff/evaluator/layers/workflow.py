@@ -84,7 +84,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         import time
 
         start_time = time.time()
-        logger.info(f"Building workflow {index}")
+        print(f"Building workflow {index}")
 
         property_type = type(physical_property).__name__
 
@@ -116,9 +116,9 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
         workflow = Workflow(global_metadata, physical_property.id)
         workflow.schema = schema.workflow_schema
-        logger.info(f"Completed building workflow {index}")
+        print(f"Completed building workflow {index}")
         end_time = time.time()
-        logger.info(f"Time taken to build workflow {index}: {(end_time - start_time)/60} minutes")
+        print(f"Time taken to build workflow {index}: {(end_time - start_time)/60} minutes")
 
         return workflow
 
