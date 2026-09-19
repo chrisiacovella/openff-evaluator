@@ -168,7 +168,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                     metadata.append(metadata_temp)
                 except Exception as e:
                     print(f"Workflow building generated an exception: {e}")
-        log.info(f"Completed building metadata for {len(metadata)} workflows.")
+        logger.info(f"Completed building metadata for {len(metadata)} workflows.")
         for index, physical_property in enumerate(properties):
             global_metadata = metadata[index]
             if global_metadata is None:
