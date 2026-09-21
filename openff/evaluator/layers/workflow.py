@@ -212,7 +212,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         # now that we have the gradient information and have a full list of the metadata for each property, we can build the workflows
         for index, physical_property in enumerate(properties):
             global_metadata = metadata.get(index)
-            global_metadata.update(physical_property.metadata)
+            if physical_property.metadata != UNDEFINED:
+                global_metadata.update(physical_property.metadata)
 
             logger.info(f"index: {index}, global_metadata: {global_metadata}")
             if global_metadata is None:
