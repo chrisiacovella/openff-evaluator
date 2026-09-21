@@ -163,6 +163,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 components.append(component_substance)
 
             if target_uncertainty is None:
+                import math
                 target_uncertainty = math.inf * physical_property.value.units
 
             target_uncertainty = target_uncertainty.to(physical_property.value.units)
