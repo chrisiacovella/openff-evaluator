@@ -200,6 +200,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             for future in as_completed(futures):
                 try:
                     i, temp = future.result()
+                    logger.info(f"Completed building gradientkeys for workflow {i} of {len(metadata)}, {temp}")
                     if i in metadata:
                         metadata[i]["parameter_gradient_keys"]= temp
                 except Exception as e:
