@@ -708,9 +708,14 @@ class Workflow:
         """
         components = []
 
+        import time
+
+        start_time = time.time()
         for component in physical_property.substance.components:
             component_substance = Substance.from_components(component)
             components.append(component_substance)
+        end_time = time.time()
+        print(f"Time taken to generate components: {end_time - start_time} seconds")
 
         if target_uncertainty is None:
             target_uncertainty = math.inf * physical_property.value.units
@@ -722,11 +727,14 @@ class Workflow:
             physical_property.substance.number_of_components + 1
         )
 
+        start_time = time.time()
         # Find only those gradient keys which will actually be relevant to the
         # property of interest
         relevant_gradient_keys = Workflow._find_relevant_gradient_keys(
             physical_property.substance, force_field_path, parameter_gradient_keys
         )
+        end_time = time.time()
+        print(f"Time taken to find relevant gradient keys: {end_time - start_time} seconds")
 
         # Define a dictionary of accessible 'global' properties.
         global_metadata = {
