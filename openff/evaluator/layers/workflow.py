@@ -7,6 +7,7 @@ import abc
 import copy
 import logging
 import os
+from math import sqrt
 
 from openff.evaluator.attributes import UNDEFINED, Attribute
 from openff.evaluator.datasets import CalculationSource
