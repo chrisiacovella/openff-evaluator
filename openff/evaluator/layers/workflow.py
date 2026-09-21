@@ -146,11 +146,11 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             # first part from _get_workflow_metadata
             target_uncertainty = None
 
-            if calculation_schema.absolute_tolerance != UNDEFINED:
-                target_uncertainty = calculation_schema.absolute_tolerance
-            elif calculation_schema.relative_tolerance != UNDEFINED:
+            if schema.absolute_tolerance != UNDEFINED:
+                target_uncertainty = schema.absolute_tolerance
+            elif schema.relative_tolerance != UNDEFINED:
                 target_uncertainty = (
-                        physical_property.uncertainty * calculation_schema.relative_tolerance
+                        physical_property.uncertainty * schema.relative_tolerance
                 )
 
             # now call functtions from Workflow.generate_default_metadata to get the global metadata
