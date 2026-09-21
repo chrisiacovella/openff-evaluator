@@ -709,13 +709,14 @@ class Workflow:
         components = []
 
         import time
+        logger = logging.getLogger(__name__)
 
         start_time = time.time()
         for component in physical_property.substance.components:
             component_substance = Substance.from_components(component)
             components.append(component_substance)
         end_time = time.time()
-        print(f"Time taken to generate components: {end_time - start_time} seconds")
+        logger.info(f"Time taken to generate components: {end_time - start_time} seconds")
 
         if target_uncertainty is None:
             target_uncertainty = math.inf * physical_property.value.units
@@ -734,7 +735,7 @@ class Workflow:
             physical_property.substance, force_field_path, parameter_gradient_keys
         )
         end_time = time.time()
-        print(f"Time taken to find relevant gradient keys: {end_time - start_time} seconds")
+        logger.info(f"Time taken to find relevant gradient keys: {end_time - start_time} seconds")
 
         # Define a dictionary of accessible 'global' properties.
         global_metadata = {
