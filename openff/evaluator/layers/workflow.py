@@ -129,7 +129,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             logger.info(f"Building workflow {index} of {len(properties)}")
             time_start = time.time()
             property_type = type(physical_property).__name__
-
+            logger.info(f"physical_property.metadata: {physical_property.metadata}")
             # Make sure a schema has been defined for this class of property
             # and this layer.
             if (
