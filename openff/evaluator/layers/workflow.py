@@ -262,6 +262,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 storage_backend,
                 schema,
             )
+            logger.info(f"global_metadata keys after _get_workflow_metadata: {list(global_metadata.keys())}")
             end_time = time.time()
             logger.info(f"Completed building metadata for workflow {index} of {len(properties)} in {(end_time - start_time)} seconds")
 
