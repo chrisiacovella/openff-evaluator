@@ -35,6 +35,8 @@ from openff.evaluator.workflow import Protocol, ProtocolGraph
 from openff.evaluator.workflow.schemas import ProtocolReplicator, WorkflowSchema
 from openff.evaluator.workflow.utils import ProtocolPath, ReplicatorValue
 
+import logging
+logger = logging.getLogger(__name__)
 
 class Workflow:
     """Encapsulates and prepares a workflow which is able to estimate
@@ -739,6 +741,11 @@ class Workflow:
             "force_field_path": force_field_path,
             "parameter_gradient_keys": relevant_gradient_keys,
         }
+        logger.info("Global metadata: {}".format(global_metadata))
+        for key, value in global_metadata.items():
+            logger.info(f"Global metadata key: {key}, value: {value}")
+
+        logger.info(f"physical_property.metadata: {physical_property.metadata}")
 
         # Include the properties metadata
         if physical_property.metadata != UNDEFINED:
