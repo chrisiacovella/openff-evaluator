@@ -264,7 +264,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 # required.
                 continue
 
-            logger.into(f"index: {index}, global_metadata: {global_metadata}")
+            logger.info(f"index: {index}, global_metadata: {global_metadata}")
             for key, value in global_metadata.items():
                 logger.info(f"global_metadata key: {key}, value: {value}")
             start_time = time.time()
