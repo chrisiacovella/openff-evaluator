@@ -214,6 +214,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             global_metadata = metadata.get(index)
             if physical_property.metadata != UNDEFINED:
                 global_metadata.update(physical_property.metadata)
+            for key, value in physical_property.metadata.items():
+                logger.info(f"physical_property.metadata key: {key}, value: {value}")
 
             logger.info(f"index: {index}, global_metadata: {global_metadata}")
             if global_metadata is None:
