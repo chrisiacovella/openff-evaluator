@@ -84,6 +84,9 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             parameter_gradient_keys,
             target_uncertainty,
         )
+        logger.info("in the _get_workflow_metadata function, printing out the global_metadata for this workflow")
+        for key, value in global_metadata.items():
+            logger.info(f"global_metadata key: {key}, value: {value}")
 
         return global_metadata
 
