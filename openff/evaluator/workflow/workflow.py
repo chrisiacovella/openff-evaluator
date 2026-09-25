@@ -750,7 +750,15 @@ class Workflow:
         # Include the properties metadata
         if physical_property.metadata != UNDEFINED:
             global_metadata.update(physical_property.metadata)
-
+        global_metadata = {
+            "thermodynamic_state": physical_property.thermodynamic_state,
+            "substance": physical_property.substance,
+            "components": components,
+            "target_uncertainty": target_uncertainty,
+            "per_component_uncertainty": per_component_uncertainty,
+            "force_field_path": force_field_path,
+            "parameter_gradient_keys": relevant_gradient_keys,
+        }
         return global_metadata
 
     def to_graph(self):
