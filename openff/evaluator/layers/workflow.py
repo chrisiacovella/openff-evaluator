@@ -124,118 +124,12 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         initial_time = time.time()
         metadata = {}
 
-        logger.info(f"Building {len(properties)} workflows.")
-        for index, physical_property in enumerate(properties):
-            logger.info(f"Building workflow {index} of {len(properties)}")
-            time_start = time.time()
-            property_type = type(physical_property).__name__
-            logger.info(f"physical_property.metadata: {physical_property.metadata}")
-            # Make sure a schema has been defined for this class of property
-            # and this layer.
-            if (
-                property_type not in options.calculation_schemas
-                or cls.__name__ not in options.calculation_schemas[property_type]
-            ):
-                continue
-
-            schema = options.calculation_schemas[property_type][cls.__name__]
-
-            # Make sure the calculation schema is the correct type for this layer.
-            assert isinstance(schema, BaseWorkflowCalculationSchema)
-            assert isinstance(schema, cls.required_schema_type())
-
-            # first part from _get_workflow_metadata
-            target_uncertainty = None
-
-            if schema.absolute_tolerance != UNDEFINED:
-                target_uncertainty = schema.absolute_tolerance
-            elif schema.relative_tolerance != UNDEFINED:
-                target_uncertainty = (
-                        physical_property.uncertainty * schema.relative_tolerance
-                )
-
-            # now call functtions from Workflow.generate_default_metadata to get the global metadata
-            logger.info(f"Building workflow stage 1: {index} of {len(properties)}")
-            components = []
-            from openff.evaluator.substances import Substance
-
-            for component in physical_property.substance.components:
-                component_substance = Substance.from_components(component)
-                components.append(component_substance)
-
-            if target_uncertainty is None:
-                import math
-                target_uncertainty = math.inf * physical_property.value.units
-
-            target_uncertainty = target_uncertainty.to(physical_property.value.units)
-
-            # +1 comes from inclusion of the full mixture as a possible component.
-            per_component_uncertainty = target_uncertainty / sqrt(
-                physical_property.substance.number_of_components + 1
-            )
-
-            global_metadata = {
-                "thermodynamic_state": physical_property.thermodynamic_state,
-                "substance": physical_property.substance,
-                "components": components,
-                "target_uncertainty": target_uncertainty,
-                "per_component_uncertainty": per_component_uncertainty,
-                "force_field_path": force_field_path,
-            }
-
-            if global_metadata is None:
-                # Make sure we have metadata returned for this
-                # property, e.g. we have data to reweight if
-                # required.
-                continue
-            # store this in a list for when we later sort out the gradient keys in parallel
-            metadata[index] = global_metadata
-
-
-        # try to paralilze the building of the gradient keys for each property, since this can take a long time if there are many properties to build workflows for
-        from concurrent.futures import ProcessPoolExecutor, as_completed
-
-        with ProcessPoolExecutor(max_workers=8) as executor:
-            futures = [executor.submit(_build_gradient_keys, physical_property, force_field_path, parameter_gradient_keys, index) for index, physical_property in enumerate(properties)]
-            for future in as_completed(futures):
-                try:
-                    i, temp = future.result()
-                    logger.info(f"Completed building gradientkeys for workflow {i} of {len(metadata)}, {temp}")
-                    if i in metadata:
-                        metadata[i]["parameter_gradient_keys"]= temp
-                except Exception as e:
-                    print(f"Workflow building generated an exception: {e}")
-
-        logger.info(f"Completed building gradientkeys for {len(metadata)} workflows.")
-
-
-        # now that we have the gradient information and have a full list of the metadata for each property, we can build the workflows
-        for index, physical_property in enumerate(properties):
-            global_metadata = metadata.get(index)
-            if physical_property.metadata != UNDEFINED:
-                global_metadata.update(physical_property.metadata)
-
-
-            logger.info(f"index: {index}, global_metadata: {global_metadata}")
-            if global_metadata is None:
-                # Make sure we have metadata returned for this
-                # property, e.g. we have data to reweight if
-                # required.
-                continue
-
-
-            workflow = Workflow(global_metadata, physical_property.id)
-            for key, value in global_metadata.items():
-                logger.info(f"global_metadata key: {key}, value: {value}")
-            schema = options.calculation_schemas[type(physical_property).__name__][cls.__name__]
-            workflow.schema = schema.workflow_schema
-            workflows.append(workflow)
-
+        # logger.info(f"Building {len(properties)} workflows.")
         # for index, physical_property in enumerate(properties):
         #     logger.info(f"Building workflow {index} of {len(properties)}")
         #     time_start = time.time()
         #     property_type = type(physical_property).__name__
-        #
+        #     logger.info(f"physical_property.metadata: {physical_property.metadata}")
         #     # Make sure a schema has been defined for this class of property
         #     # and this layer.
         #     if (
@@ -250,41 +144,147 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         #     assert isinstance(schema, BaseWorkflowCalculationSchema)
         #     assert isinstance(schema, cls.required_schema_type())
         #
-        #     start_time = time.time()
-        #     global_metadata = cls._get_workflow_metadata(
-        #         working_directory,
-        #         physical_property,
-        #         force_field_path,
-        #         parameter_gradient_keys,
-        #         storage_backend,
-        #         schema,
+        #     # first part from _get_workflow_metadata
+        #     target_uncertainty = None
+        #
+        #     if schema.absolute_tolerance != UNDEFINED:
+        #         target_uncertainty = schema.absolute_tolerance
+        #     elif schema.relative_tolerance != UNDEFINED:
+        #         target_uncertainty = (
+        #                 physical_property.uncertainty * schema.relative_tolerance
+        #         )
+        #
+        #     # now call functtions from Workflow.generate_default_metadata to get the global metadata
+        #     logger.info(f"Building workflow stage 1: {index} of {len(properties)}")
+        #     components = []
+        #     from openff.evaluator.substances import Substance
+        #
+        #     for component in physical_property.substance.components:
+        #         component_substance = Substance.from_components(component)
+        #         components.append(component_substance)
+        #
+        #     if target_uncertainty is None:
+        #         import math
+        #         target_uncertainty = math.inf * physical_property.value.units
+        #
+        #     target_uncertainty = target_uncertainty.to(physical_property.value.units)
+        #
+        #     # +1 comes from inclusion of the full mixture as a possible component.
+        #     per_component_uncertainty = target_uncertainty / sqrt(
+        #         physical_property.substance.number_of_components + 1
         #     )
-        #     end_time = time.time()
-        #     logger.info(f"Completed building metadata for workflow {index} of {len(properties)} in {(end_time - start_time)} seconds")
+        #
+        #     global_metadata = {
+        #         "thermodynamic_state": physical_property.thermodynamic_state,
+        #         "substance": physical_property.substance,
+        #         "components": components,
+        #         "target_uncertainty": target_uncertainty,
+        #         "per_component_uncertainty": per_component_uncertainty,
+        #         "force_field_path": force_field_path,
+        #     }
         #
         #     if global_metadata is None:
         #         # Make sure we have metadata returned for this
         #         # property, e.g. we have data to reweight if
         #         # required.
         #         continue
+        #     # store this in a list for when we later sort out the gradient keys in parallel
+        #     metadata[index] = global_metadata
+        #
+        #
+        # # try to paralilze the building of the gradient keys for each property, since this can take a long time if there are many properties to build workflows for
+        # from concurrent.futures import ProcessPoolExecutor, as_completed
+        #
+        # with ProcessPoolExecutor(max_workers=8) as executor:
+        #     futures = [executor.submit(_build_gradient_keys, physical_property, force_field_path, parameter_gradient_keys, index) for index, physical_property in enumerate(properties)]
+        #     for future in as_completed(futures):
+        #         try:
+        #             i, temp = future.result()
+        #             logger.info(f"Completed building gradientkeys for workflow {i} of {len(metadata)}, {temp}")
+        #             if i in metadata:
+        #                 metadata[i]["parameter_gradient_keys"]= temp
+        #         except Exception as e:
+        #             print(f"Workflow building generated an exception: {e}")
+        #
+        # logger.info(f"Completed building gradientkeys for {len(metadata)} workflows.")
+        #
+        #
+        # # now that we have the gradient information and have a full list of the metadata for each property, we can build the workflows
+        # for index, physical_property in enumerate(properties):
+        #     global_metadata = metadata.get(index)
+        #     if physical_property.metadata != UNDEFINED:
+        #         global_metadata.update(physical_property.metadata)
+        #
         #
         #     logger.info(f"index: {index}, global_metadata: {global_metadata}")
+        #     if global_metadata is None:
+        #         # Make sure we have metadata returned for this
+        #         # property, e.g. we have data to reweight if
+        #         # required.
+        #         continue
+        #
+        #
+        #     workflow = Workflow(global_metadata, physical_property.id)
         #     for key, value in global_metadata.items():
         #         logger.info(f"global_metadata key: {key}, value: {value}")
-        #     start_time = time.time()
-        #     workflow = Workflow(global_metadata, physical_property.id)
-        #     end_time = time.time()
-        #     logger.info(f"Completed building workflow object for workflow {index} of {len(properties)} in {(end_time - start_time)} seconds")
-        #
-        #     start_time = time.time()
+        #     schema = options.calculation_schemas[type(physical_property).__name__][cls.__name__]
         #     workflow.schema = schema.workflow_schema
-        #     end_time = time.time()
-        #     logger.info(f"Completed setting workflow schema for workflow {index} of {len(properties)} in {(end_time - start_time)} seconds")
-        #
-        #
-        #     time_end = time.time()
-        #     logger.info(f"Completed building workflow {index} of {len(properties)} in {(time_end - time_start)} seconds")
         #     workflows.append(workflow)
+
+        for index, physical_property in enumerate(properties):
+            logger.info(f"Building workflow {index} of {len(properties)}")
+            time_start = time.time()
+            property_type = type(physical_property).__name__
+
+            # Make sure a schema has been defined for this class of property
+            # and this layer.
+            if (
+                property_type not in options.calculation_schemas
+                or cls.__name__ not in options.calculation_schemas[property_type]
+            ):
+                continue
+
+            schema = options.calculation_schemas[property_type][cls.__name__]
+
+            # Make sure the calculation schema is the correct type for this layer.
+            assert isinstance(schema, BaseWorkflowCalculationSchema)
+            assert isinstance(schema, cls.required_schema_type())
+
+            start_time = time.time()
+            global_metadata = cls._get_workflow_metadata(
+                working_directory,
+                physical_property,
+                force_field_path,
+                parameter_gradient_keys,
+                storage_backend,
+                schema,
+            )
+            end_time = time.time()
+            logger.info(f"Completed building metadata for workflow {index} of {len(properties)} in {(end_time - start_time)} seconds")
+
+            if global_metadata is None:
+                # Make sure we have metadata returned for this
+                # property, e.g. we have data to reweight if
+                # required.
+                continue
+            logger.info("in the main loop, printing out the global_metadata for this workflow")
+            for key, value in global_metadata.items():
+                logger.info(f"global_metadata key: {key}, value: {value}")
+
+            start_time = time.time()
+            workflow = Workflow(global_metadata, physical_property.id)
+            end_time = time.time()
+            logger.info(f"Completed building workflow object for workflow {index} of {len(properties)} in {(end_time - start_time)} seconds")
+
+            start_time = time.time()
+            workflow.schema = schema.workflow_schema
+            end_time = time.time()
+            logger.info(f"Completed setting workflow schema for workflow {index} of {len(properties)} in {(end_time - start_time)} seconds")
+
+
+            time_end = time.time()
+            logger.info(f"Completed building workflow {index} of {len(properties)} in {(time_end - time_start)} seconds")
+            workflows.append(workflow)
 
         workflow_graph = WorkflowGraph()
         workflow_graph.add_workflows(*workflows)
