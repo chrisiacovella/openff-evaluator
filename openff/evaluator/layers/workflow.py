@@ -158,8 +158,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         )
 
         return global_metadata
-    @staticmethod
-    def
+
 
     @classmethod
     def _build_workflow_graph(
