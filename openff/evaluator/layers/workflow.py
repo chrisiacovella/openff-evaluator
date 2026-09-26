@@ -229,8 +229,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
             metadata[index] = global_metadata
 
-
-       from concurrent.futures import ProcessPoolExecutor, as_completed
+        from concurrent.futures import ProcessPoolExecutor, as_completed
 
         with ProcessPoolExecutor(max_workers=8) as executor:
             futures = [executor.submit(_build_gradient_keys, physical_property, force_field_path, parameter_gradient_keys, index) for index, physical_property in enumerate(properties)]
