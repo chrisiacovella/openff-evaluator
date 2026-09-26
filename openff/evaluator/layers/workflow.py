@@ -76,7 +76,6 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             )
 
         # now call functions from Workflow.generate_default_metadata to get the global metadata
-        logger.info(f"Building workflow stage 1: {index} of {len(properties)}")
         components = []
         from openff.evaluator.substances import Substance
 
