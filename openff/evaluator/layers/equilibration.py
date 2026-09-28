@@ -242,6 +242,8 @@ class EquilibrationLayer(WorkflowCalculationLayer):
         storage_backend,
         calculation_schema,
     ):
+        import time
+
         # search storage for matching boxes already
         template_queries = calculation_schema.storage_queries
         for key in template_queries:
@@ -263,7 +265,6 @@ class EquilibrationLayer(WorkflowCalculationLayer):
                 # can get them in the order of the physical property substance
                 # later on
                 query_lists_by_components = {}
-                import time
 
                 initial_time = time.time()
                 for query_list in query_results.values():
@@ -298,6 +299,7 @@ class EquilibrationLayer(WorkflowCalculationLayer):
                 ]
 
             stored_data_tuples = []
+            start_time = time.time()
             for obj in objects_to_store:
                 if not len(obj):
                     stored_data_tuples.append([])
@@ -310,6 +312,9 @@ class EquilibrationLayer(WorkflowCalculationLayer):
                 stored_data_tuples.append(
                     (object_path, data_directory, force_field_path)
                 )
+            end_time = time.time()
+            logger.info(
+                f"Time to store data for {key}: {end_time - start_time} seconds")
 
             if len(stored_data_tuples) == 1:
                 stored_data_tuples = stored_data_tuples[0]
