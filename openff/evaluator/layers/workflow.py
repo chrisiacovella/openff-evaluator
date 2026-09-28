@@ -66,9 +66,9 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             found / assembled.
         """
         # first part from _get_workflow_metadata
-        import time
+        # import time
 
-        start_time = time.time()
+        # start_time = time.time()
         target_uncertainty = None
 
         if calculation_schema.absolute_tolerance != UNDEFINED:
@@ -105,8 +105,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             "per_component_uncertainty": per_component_uncertainty,
             "force_field_path": force_field_path,
         }
-        end_time = time.time()
-        logger.info(f"Completed building metadata for workflow in workflow.py in {(end_time - start_time)} seconds")
+        # end_time = time.time()
+        # logger.info(f"Completed building metadata for workflow in workflow.py in {(end_time - start_time)} seconds")
 
         return global_metadata
 

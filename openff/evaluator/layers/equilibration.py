@@ -263,6 +263,9 @@ class EquilibrationLayer(WorkflowCalculationLayer):
                 # can get them in the order of the physical property substance
                 # later on
                 query_lists_by_components = {}
+                import time
+
+                initial_time = time.time()
                 for query_list in query_results.values():
                     for result in query_list:
                         storage_key, data_object, data_directory = result
@@ -283,7 +286,10 @@ class EquilibrationLayer(WorkflowCalculationLayer):
                         objects_to_store.append([])
                         continue
                     objects_to_store.append(query_lists_by_components[component])
-
+                final_time = time.time()
+                logger.info(
+                    f"Time to process query results for {key}: {final_time - initial_time} seconds"
+                )
             elif len(query_results):
                 assert len(query_results) == 1, query_results
                 query_list = list(query_results.values())[0]
