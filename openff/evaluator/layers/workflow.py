@@ -21,22 +21,14 @@ from openff.evaluator.workflow import Workflow, WorkflowGraph, WorkflowSchema
 
 logger = logging.getLogger(__name__)
 logger.propagate = True
-def _build_gradient_keys(physical_property, force_field_path, parameter_gradient_keys, calculation_schema, working_directory, storage_backend, index):
+def _build_gradient_keys(physical_property, force_field_path, parameter_gradient_keys, index):
     relevant_gradient_keys = Workflow._find_relevant_gradient_keys(
         physical_property.substance, force_field_path, parameter_gradient_keys
     )
 
-    global_metadata = {}
-    EquilibrationLayer._update_metadata_with_template_queries(
-        global_metadata,
-        working_directory,
-        physical_property,
-        force_field_path,
-        storage_backend,
-        calculation_schema,
-    )
 
-    return index, relevant_gradient_keys, global_metadata
+
+    return index, relevant_gradient_keys
 
 
 class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
@@ -214,6 +206,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         logger.info(f"Building {len(properties)} workflows.")
 
         initial_time_first_loop = time.time()
+
+
         for index, physical_property in enumerate(properties):
 
             #logger.info(f"Building workflow {index} of {len(properties)}")
@@ -258,9 +252,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                     i, temp, storage_metadata = future.result()
                     if i in metadata:
                         metadata[i]["parameter_gradient_keys"]= temp
-                        metadata[i].update(storage_metadata)
                 except Exception as e:
-                    print(f"Workflow {i} building generated an exception: {e}")
+                    print(f"Workflow  generated an exception: {e}")
 
         final_time_second_loop = time.time()
         logger.info(f"2- Completed building gradient keys for {len(metadata)} workflows in {(final_time_second_loop - initial_time_second_loop)} seconds")

@@ -173,13 +173,13 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
             calculation_schema.equilibration_error_aggregration
         )
 
-        # EquilibrationLayer._update_metadata_with_template_queries(
-        #     global_metadata,
-        #     working_directory,
-        #     physical_property,
-        #     force_field_path,
-        #     storage_backend,
-        #     calculation_schema,
-        # )
+        EquilibrationLayer._update_metadata_with_template_queries(
+            global_metadata,
+            working_directory,
+            physical_property,
+            force_field_path,
+            storage_backend,
+            calculation_schema,
+        )
 
         return global_metadata
