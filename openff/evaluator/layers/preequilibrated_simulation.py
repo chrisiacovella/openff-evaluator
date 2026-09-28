@@ -162,6 +162,8 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
         if global_metadata is None:
             return None
 
+        import time
+        initial_time = time.time()
         global_metadata["equilibration_error_tolerances"] = copy.deepcopy(
             calculation_schema.equilibration_error_tolerances
         )
@@ -177,5 +179,6 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
             storage_backend,
             calculation_schema,
         )
-
+        final_time = time.time()
+        logger.debug(f"Time taken to update metadata with template queries: {final_time - initial_time}")
         return global_metadata
