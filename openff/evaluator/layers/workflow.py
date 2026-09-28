@@ -20,7 +20,7 @@ from openff.evaluator.layers.layers import BaseCalculationLayerSchema
 from openff.evaluator.workflow import Workflow, WorkflowGraph, WorkflowSchema
 
 logger = logging.getLogger(__name__)
-
+logger.propagate = True
 def _build_gradient_keys(physical_property, force_field_path, parameter_gradient_keys, index):
     relevant_gradient_keys = Workflow._find_relevant_gradient_keys(
         physical_property.substance, force_field_path, parameter_gradient_keys
