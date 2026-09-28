@@ -223,6 +223,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             assert isinstance(schema, BaseWorkflowCalculationSchema)
             assert isinstance(schema, cls.required_schema_type())
 
+            initial_time = time.time()
+
             global_metadata = cls._get_workflow_metadata_without_gradient_keys(
                 working_directory,
                 physical_property,
@@ -230,6 +232,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 storage_backend,
                 schema,
             )
+            final_time = time.time()
+            logger.info(f"Completed building metadata for workflow {index} of {len(properties)} in {(final_time - initial_time)} seconds")
 
             metadata[index] = global_metadata
 
