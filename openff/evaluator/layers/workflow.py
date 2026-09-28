@@ -21,12 +21,22 @@ from openff.evaluator.workflow import Workflow, WorkflowGraph, WorkflowSchema
 
 logger = logging.getLogger(__name__)
 logger.propagate = True
-def _build_gradient_keys(physical_property, force_field_path, parameter_gradient_keys, index):
+def _build_gradient_keys(physical_property, force_field_path, parameter_gradient_keys, calculation_schema, working_directory, storage_backend, index):
     relevant_gradient_keys = Workflow._find_relevant_gradient_keys(
         physical_property.substance, force_field_path, parameter_gradient_keys
     )
 
-    return index, relevant_gradient_keys
+    global_metadata = {}
+    EquilibrationLayer._update_metadata_with_template_queries(
+        global_metadata,
+        working_directory,
+        physical_property,
+        force_field_path,
+        storage_backend,
+        calculation_schema,
+    )
+
+    return index, relevant_gradient_keys, global_metadata
 
 
 class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
@@ -242,12 +252,13 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
         initial_time_second_loop = time.time()
         with ProcessPoolExecutor(max_workers=48) as executor:
-            futures = [executor.submit(_build_gradient_keys, physical_property, force_field_path, parameter_gradient_keys, index) for index, physical_property in enumerate(properties)]
+            futures = [executor.submit(_build_gradient_keys, physical_property, force_field_path, parameter_gradient_keys, options.calculation_schemas[type(physical_property).__name__][cls.__name__], working_directory, storage_backend, index) for index, physical_property in enumerate(properties)]
             for future in as_completed(futures):
                 try:
-                    i, temp = future.result()
+                    i, temp, storage_metadata = future.result()
                     if i in metadata:
                         metadata[i]["parameter_gradient_keys"]= temp
+                        metadata[i].update(storage_metadata)
                 except Exception as e:
                     print(f"Workflow {i} building generated an exception: {e}")
 

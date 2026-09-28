@@ -152,9 +152,7 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
         Get the metadata required to run a workflow calculation.
         This method injects a preequilibrated_box_file into the metadata.
         """
-        import time
 
-        initial_time = time.time()
         global_metadata = WorkflowCalculationLayer._get_workflow_metadata_without_gradient_keys(
             working_directory,
             physical_property,
@@ -162,35 +160,26 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
             storage_backend,
             calculation_schema,
         )
-        final_time = time.time()
-        logger.debug(f"Time taken to get workflow metadata without gradient keys: {final_time - initial_time} seconds")
+
         if global_metadata is None:
             return None
 
 
-        initial_time = time.time()
         global_metadata["equilibration_error_tolerances"] = copy.deepcopy(
             calculation_schema.equilibration_error_tolerances
         )
-        final_time = time.time()
-        logger.debug(f"Time taken to copy equilibration error tolerances: {final_time - initial_time} seconds")
 
-        initial_time = time.time()
         global_metadata["equilibration_error_aggregration"] = (
             calculation_schema.equilibration_error_aggregration
         )
-        final_time = time.time()
-        logger.debug(f"Time taken to copy equilibration error aggregation: {final_time - initial_time} seconds")
 
-        initial_time = time.time()
-        EquilibrationLayer._update_metadata_with_template_queries(
-            global_metadata,
-            working_directory,
-            physical_property,
-            force_field_path,
-            storage_backend,
-            calculation_schema,
-        )
-        final_time = time.time()
-        logger.debug(f"Time taken to update metadata with template queries: {final_time - initial_time} seconds")
+        # EquilibrationLayer._update_metadata_with_template_queries(
+        #     global_metadata,
+        #     working_directory,
+        #     physical_property,
+        #     force_field_path,
+        #     storage_backend,
+        #     calculation_schema,
+        # )
+
         return global_metadata
