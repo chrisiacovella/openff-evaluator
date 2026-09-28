@@ -247,6 +247,8 @@ class EquilibrationLayer(WorkflowCalculationLayer):
         # search storage for matching boxes already
         template_queries = calculation_schema.storage_queries
         for key in template_queries:
+            start_time = time.time()
+
             query = EquilibrationLayer._update_query(
                 template_queries[key],
                 physical_property,
@@ -254,8 +256,12 @@ class EquilibrationLayer(WorkflowCalculationLayer):
             )
 
             # Apply the query.
+            init_query_time = time.time()
             query_results = storage_backend.query(query)
-
+            end_query_time = time.time()
+            logger.info(
+                f"Time to query storage for {key}: {end_query_time - init_query_time} seconds"
+            )
             objects_to_store = []
 
             # TODO: should this be hardcoded?
@@ -299,7 +305,6 @@ class EquilibrationLayer(WorkflowCalculationLayer):
                 ]
 
             stored_data_tuples = []
-            start_time = time.time()
             for obj in objects_to_store:
                 if not len(obj):
                     stored_data_tuples.append([])
