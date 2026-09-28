@@ -203,14 +203,13 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
         logger.info(f"Building {len(properties)} workflows.")
 
+        initial_time_first_loop = time.time()
         for index, physical_property in enumerate(properties):
 
             logger.info(f"Building workflow {index} of {len(properties)}")
 
             property_type = type(physical_property).__name__
-            #logger.info(f"physical_property.metadata: {physical_property.metadata}")
-            # Make sure a schema has been defined for this class of property
-            # and this layer.
+
             if (
                 property_type not in options.calculation_schemas
                 or cls.__name__ not in options.calculation_schemas[property_type]
@@ -233,27 +232,31 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 schema,
             )
             final_time = time.time()
-            logger.info(f"Completed building metadata for workflow {index} of {len(properties)} in {(final_time - initial_time)} seconds")
 
             metadata[index] = global_metadata
 
+        final_time_first_loop = time.time()
+        logger.info(f"1- Completed building metadata for {len(metadata)} workflows in {(final_time_first_loop - initial_time_first_loop)} seconds")
+
         from concurrent.futures import ProcessPoolExecutor, as_completed
 
-        with ProcessPoolExecutor(max_workers=8) as executor:
+        initial_time_second_loop = time.time()
+        with ProcessPoolExecutor(max_workers=48) as executor:
             futures = [executor.submit(_build_gradient_keys, physical_property, force_field_path, parameter_gradient_keys, index) for index, physical_property in enumerate(properties)]
             for future in as_completed(futures):
                 try:
                     i, temp = future.result()
-                    logger.info(f"Completed building gradient keys for workflow {i} of {len(metadata)}, {temp}")
                     if i in metadata:
                         metadata[i]["parameter_gradient_keys"]= temp
                 except Exception as e:
-                    print(f"Workflow building generated an exception: {e}")
+                    print(f"Workflow {i} building generated an exception: {e}")
 
-        logger.info(f"Completed building gradient keys for {len(metadata)} workflows.")
-
+        final_time_second_loop = time.time()
+        logger.info(f"2- Completed building gradient keys for {len(metadata)} workflows in {(final_time_second_loop - initial_time_second_loop)} seconds")
 
         # now that we have the gradient information and have a full list of the metadata for each property, we can build the workflows
+
+        initial_time_third_loop = time.time()
         for index, physical_property in enumerate(properties):
             global_metadata = metadata.get(index)
             if physical_property.metadata != UNDEFINED:
@@ -269,11 +272,13 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
 
             workflow = Workflow(global_metadata, physical_property.id)
-            for key, value in global_metadata.items():
-                logger.info(f"global_metadata key: {key}, value: {value}")
+            # for key, value in global_metadata.items():
+            #     logger.info(f"global_metadata key: {key}, value: {value}")
             schema = options.calculation_schemas[type(physical_property).__name__][cls.__name__]
             workflow.schema = schema.workflow_schema
             workflows.append(workflow)
+        final_time_third_loop = time.time()
+        logger.info(f"3- Completed building {len(workflows)} workflows in {(final_time_third_loop - initial_time_third_loop)} seconds")
 
         #logger.info(f"Building {len(properties)} workflows.")
         # for index, physical_property in enumerate(properties):
