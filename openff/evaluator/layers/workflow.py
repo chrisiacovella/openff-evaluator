@@ -206,8 +206,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         initial_time_first_loop = time.time()
         for index, physical_property in enumerate(properties):
 
-            logger.info(f"Building workflow {index} of {len(properties)}")
-
+            #logger.info(f"Building workflow {index} of {len(properties)}")
+            initial_time = time.time()
             property_type = type(physical_property).__name__
 
             if (
@@ -222,7 +222,6 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             assert isinstance(schema, BaseWorkflowCalculationSchema)
             assert isinstance(schema, cls.required_schema_type())
 
-            initial_time = time.time()
 
             global_metadata = cls._get_workflow_metadata_without_gradient_keys(
                 working_directory,
@@ -231,9 +230,10 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 storage_backend,
                 schema,
             )
-            final_time = time.time()
 
             metadata[index] = global_metadata
+            final_time = time.time()
+            logger.info(f"Completed building metadata for workflow {index} of {len(properties)} in {(final_time - initial_time)} seconds")
 
         final_time_first_loop = time.time()
         logger.info(f"1- Completed building metadata for {len(metadata)} workflows in {(final_time_first_loop - initial_time_first_loop)} seconds")
