@@ -57,6 +57,9 @@ class StorageBackend(abc.ABC):
         # and its hash value for easy comparision.
         self._object_hashes: Dict[int, str] = dict()
 
+        # cache the full scan over every stored key.
+        self._query_scan_cache: Dict[str, list] = dict()
+
         # Create a thread lock to prevent concurrent
         # thread access.
         self._lock = RLock()
@@ -269,6 +272,10 @@ class StorageBackend(abc.ABC):
             self._stored_object_keys[object_class.__name__].append(storage_key)
             self._save_stored_object_keys()
 
+            # A new object of this class is now available to match against,
+            # so any cached scan for it (see __init__ / _query) is stale.
+            self._query_scan_cache.pop(object_class.__name__, None)
+
         return storage_key
 
     def store_force_field(self, force_field):
@@ -288,6 +295,38 @@ class StorageBackend(abc.ABC):
         force_field_data.force_field_source = force_field
 
         return self.store_object(force_field_data)
+
+    def _scan_stored_objects(self, data_class):
+        """Performs the (potentially expensive) full scan over every
+        stored key of `data_class`, checking existence and retrieving
+        each object. Separated out from `_query` so the result can be
+        cached and reused across many queries against the same class.
+
+        Parameters
+        ----------
+        data_class: type of BaseStoredData
+            The class of stored object to scan for.
+
+        Returns
+        -------
+        list of tuple of str, BaseStoredData and str
+            The (storage_key, data_object, data_directory_path) tuples
+            for every currently-existing stored object of this class.
+        """
+        scanned_objects = []
+
+        for unique_key in self._stored_object_keys[data_class.__name__]:
+            if not self._object_exists(unique_key):
+                # Make sure the object is still in the system.
+                continue
+
+            stored_object, stored_directory = self.retrieve_object(
+                unique_key, data_class
+            )
+
+            scanned_objects.append((unique_key, stored_object, stored_directory))
+
+        return scanned_objects
 
     @abc.abstractmethod
     def _retrieve_object(self, storage_key, expected_type=None):
@@ -453,14 +492,14 @@ class StorageBackend(abc.ABC):
             # Exit early of there are no objects of the correct type.
             return results
 
-        for unique_key in self._stored_object_keys[data_class.__name__]:
-            if not self._object_exists(unique_key):
-                # Make sure the object is still in the system.
-                continue
-
-            stored_object, stored_directory = self.retrieve_object(
-                unique_key, data_class
+        if data_class.__name__ not in self._query_scan_cache:
+            self._query_scan_cache[data_class.__name__] = self._scan_stored_objects(
+                data_class
             )
+
+        for unique_key, stored_object, stored_directory in self._query_scan_cache[
+            data_class.__name__
+        ]:
 
             matches = data_query.apply(stored_object)
 
