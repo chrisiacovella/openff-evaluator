@@ -112,7 +112,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
 
         provenance = {}
         workflows = []
-
+        import time
+        start_time = time.time()
         for index, physical_property in enumerate(properties):
             logger.info(f"Building workflow {index} of {len(properties)}")
 
@@ -131,6 +132,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             # Make sure the calculation schema is the correct type for this layer.
             assert isinstance(schema, BaseWorkflowCalculationSchema)
             assert isinstance(schema, cls.required_schema_type())
+            start_time = time.time()
 
             global_metadata = cls._get_workflow_metadata(
                 working_directory,
@@ -140,6 +142,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 storage_backend,
                 schema,
             )
+            end_time = time.time()
+            logger.info(f"Time to get workflow metadata: {end_time - start_time} seconds")
 
             if global_metadata is None:
                 # Make sure we have metadata returned for this
