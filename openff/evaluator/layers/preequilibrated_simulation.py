@@ -141,3 +141,46 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
         logger.info(f"Time to update metadata with template queries: {final_time - initial_time} seconds")
 
         return global_metadata
+
+    @staticmethod
+    def _get_workflow_metadata_without_gradient_keys(
+            working_directory,
+            physical_property,
+            force_field_path,
+            storage_backend,
+            calculation_schema,
+    ):
+        """
+        Get the metadata required to run a workflow calculation.
+        This method injects a preequilibrated_box_file into the metadata.
+        """
+
+        global_metadata = WorkflowCalculationLayer._get_workflow_metadata_without_gradient_keys(
+            working_directory,
+            physical_property,
+            force_field_path,
+            storage_backend,
+            calculation_schema,
+        )
+
+        if global_metadata is None:
+            return None
+
+        global_metadata["equilibration_error_tolerances"] = copy.deepcopy(
+            calculation_schema.equilibration_error_tolerances
+        )
+
+        global_metadata["equilibration_error_aggregration"] = (
+            calculation_schema.equilibration_error_aggregration
+        )
+
+        EquilibrationLayer._update_metadata_with_template_queries(
+            global_metadata,
+            working_directory,
+            physical_property,
+            force_field_path,
+            storage_backend,
+            calculation_schema,
+        )
+
+        return global_metadata
