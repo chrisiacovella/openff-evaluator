@@ -19,7 +19,7 @@ from openff.evaluator.layers.layers import BaseCalculationLayerSchema
 from openff.evaluator.workflow import Workflow, WorkflowGraph, WorkflowSchema
 
 logger = logging.getLogger(__name__)
-
+logger.propagate = True
 
 class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
     """An calculation layer which uses the built-in workflow

@@ -35,6 +35,7 @@ from openff.evaluator.workflow import Protocol, ProtocolGraph
 from openff.evaluator.workflow.schemas import ProtocolReplicator, WorkflowSchema
 from openff.evaluator.workflow.utils import ProtocolPath, ReplicatorValue
 
+logger = logging.getLogger(__name__)
 
 class Workflow:
     """Encapsulates and prepares a workflow which is able to estimate
@@ -698,9 +699,14 @@ class Workflow:
 
         # Find only those gradient keys which will actually be relevant to the
         # property of interest
+        import time
+
+        initial_time = time.time()
         relevant_gradient_keys = Workflow._find_relevant_gradient_keys(
             physical_property.substance, force_field_path, parameter_gradient_keys
         )
+        final_time = time.time()
+        logging.info(f"Time taken to find relevant gradient keys: {final_time - initial_time} seconds")
 
         # Define a dictionary of accessible 'global' properties.
         global_metadata = {
