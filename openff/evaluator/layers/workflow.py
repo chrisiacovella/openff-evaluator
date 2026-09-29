@@ -272,7 +272,6 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
                 working_directory,
                 physical_property,
                 force_field_path,
-                parameter_gradient_keys,
                 storage_backend,
                 schema,
             )
