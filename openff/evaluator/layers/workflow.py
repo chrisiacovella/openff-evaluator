@@ -75,6 +75,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         # first part from _get_workflow_metadata
 
         target_uncertainty = None
+        import math
 
         if calculation_schema.absolute_tolerance != UNDEFINED:
             target_uncertainty = calculation_schema.absolute_tolerance
@@ -92,13 +93,12 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             components.append(component_substance)
 
         if target_uncertainty is None:
-            import math
             target_uncertainty = math.inf * physical_property.value.units
 
         target_uncertainty = target_uncertainty.to(physical_property.value.units)
 
         # +1 comes from inclusion of the full mixture as a possible component.
-        per_component_uncertainty = target_uncertainty / sqrt(
+        per_component_uncertainty = target_uncertainty / math.sqrt(
             physical_property.substance.number_of_components + 1
         )
 
