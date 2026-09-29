@@ -35,6 +35,8 @@ from openff.evaluator.workflow import Protocol, ProtocolGraph
 from openff.evaluator.workflow.schemas import ProtocolReplicator, WorkflowSchema
 from openff.evaluator.workflow.utils import ProtocolPath, ReplicatorValue
 
+import logging
+
 logger = logging.getLogger(__name__)
 
 class Workflow:
