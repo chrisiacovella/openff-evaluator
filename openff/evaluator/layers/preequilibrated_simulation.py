@@ -127,7 +127,8 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
         global_metadata["equilibration_error_aggregration"] = (
             calculation_schema.equilibration_error_aggregration
         )
-
+        import time
+        initial_time = time.time()
         EquilibrationLayer._update_metadata_with_template_queries(
             global_metadata,
             working_directory,
@@ -136,5 +137,7 @@ class PreequilibratedSimulationLayer(WorkflowCalculationLayer):
             storage_backend,
             calculation_schema,
         )
+        final_time = time.time()
+        logger.info(f"Time to update metadata with template queries: {final_time - initial_time} seconds")
 
         return global_metadata
