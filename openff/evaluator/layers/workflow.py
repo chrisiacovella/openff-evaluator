@@ -309,6 +309,8 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         final_time_final_loop = time.time()
         logger.info(
             f"3- Completed building workflows for {len(workflows)} workflows in {(final_time_final_loop - initial_time_final_loop)} seconds")
+
+        logger.info(f"Completed building workflow graph with {len(workflows)} workflows in {(final_time_final_loop - initial_loop_time)} seconds")
         workflow_graph = WorkflowGraph()
         workflow_graph.add_workflows(*workflows)
 
