@@ -200,7 +200,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
         provenance = {}
         workflows = []
         import time
-        start_time = time.time()
+        initial_time = time.time()
         for index, physical_property in enumerate(properties):
             logger.info(f"Building workflow {index} of {len(properties)}")
 
@@ -242,7 +242,7 @@ class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
             workflow.schema = schema.workflow_schema
             workflows.append(workflow)
         final_time = time.time()
-        logger.info(f"Completed building workflows for {len(workflows)} workflows in {(final_time - start_time)} seconds")
+        logger.info(f"Completed building workflows for {len(workflows)} workflows in {(final_time - initial_time)} seconds")
 
         # metadata_temp = {}
         #
