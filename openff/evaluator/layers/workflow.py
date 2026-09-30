@@ -20,6 +20,12 @@ from openff.evaluator.workflow import Workflow, WorkflowGraph, WorkflowSchema
 
 logger = logging.getLogger(__name__)
 
+def _build_gradient_keys(physical_property, force_field_path, parameter_gradient_keys, index):
+    relevant_gradient_keys = Workflow._find_relevant_gradient_keys(
+        physical_property.substance, force_field_path, parameter_gradient_keys
+    )
+
+    return index, relevant_gradient_keys
 
 class WorkflowCalculationLayer(CalculationLayer, abc.ABC):
     """An calculation layer which uses the built-in workflow
